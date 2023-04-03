@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OpenAI Chat Bot</title>
+</head>
+<body>
+	<h1>OpenAI Chat Bot</h1>
+	<form>
+		<div id="messages">
+			<div>
+				<label for="role_1">Role:</label>
+				<select id="role_1" name="role[]">
+					<option value="system">System</option>
+					<option value="user">User</option>
+				</select>
+				<label for="content_1">Content:</label>
+				<input type="text" id="content_1" name="content[]">
+			</div>
+		</div>
+		<br>
+		<button type="button" onclick="addMessage()">Add Message</button>
+		<button type="button" onclick="SendMessage()">Send Message</button>
+	</form>
+	<div id="output"></div>
+	<script>
+		var messageCount = 1;
+
+		function addMessage() {
+			messageCount++;
+			var messages = document.getElementById("messages");
+			var newMessage = document.createElement("div");
+			newMessage.innerHTML = `
+				<label for="role_${messageCount}">Role:</label>
+				<select id="role_${messageCount}" name="role[]">
+					<option value="system">System</option>
+					<option value="user">User</option>
+				</select>
+				<label for="content_${messageCount}">Content:</label>
+				<input type="text" id="content_${messageCount}" name="content[]">
+			`;
+			messages.appendChild(newMessage);
+		}
+
+		function SendMessage() {
+			var messages = [];
+			for (var i = 1; i <= messageCount; i++) {
+				var role = document.getElementById(`role_${i}`).value;
+				var content = document.getElementById(`content_${i}`).value;
+				messages.push({role: role, content: content});
+			}
+			var args = {
+				messages: messages
+			};
+
+			console.log(args);
+			sendRequest(args).then(rsp => {
+                    console.log(rsp)
+                }).catch( err =>{
+					console.log(err)
+                })
+		}
+	</script>
+</body>
+</html>
