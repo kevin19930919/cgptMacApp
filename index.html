@@ -21,7 +21,17 @@
 		<button type="button" onclick="addMessage()">Add Message</button>
 		<button type="button" onclick="SendMessage()">Send Message</button>
 	</form>
-	<div id="output"></div>
+	<br>
+	<label for="api_response">API Response:</label>
+	<textarea id="api_response" name="api_response" rows="20" cols="100"></textarea>
+	<br>
+
+	<style>
+		textarea {
+			overflow: hidden;
+			resize: none;
+		}
+	</style>
 	<script>
 		var messageCount = 1;
 
@@ -59,6 +69,27 @@
 					console.log(err)
                 })
 		}
+
+		function autoResizeTextarea(textarea) {
+			textarea.style.height = 'auto';
+			textarea.style.height = textarea.scrollHeight + 'px';
+		}
+
+		function writeToTextarea(text) {
+			var largeText = document.getElementById('api_response');
+			largeText.value = text;
+			autoResizeTextarea(largeText);
+		}
+
+		window.addEventListener('DOMContentLoaded', function () {
+			var largeText = document.getElementById('api_response');
+			largeText.addEventListener('input', function () {
+				autoResizeTextarea(this);
+			});
+
+			// Initial resize
+			autoResizeTextarea(largeText);
+		});
 	</script>
 </body>
 </html>

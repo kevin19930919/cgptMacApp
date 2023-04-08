@@ -33,7 +33,7 @@ func loadHTMLFile() (*string, error) {
 
 func main() {
 	// Create the UI window
-	ui, err := lorca.New("", "", 480, 320, "--remote-allow-origins=*")
+	ui, err := lorca.New("", "", 1440, 900, "--remote-allow-origins=*")
 	if err != nil {
 		fmt.Println("Error creating window:", err)
 		return
