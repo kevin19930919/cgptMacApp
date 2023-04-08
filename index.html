@@ -65,6 +65,7 @@
 			console.log(args);
 			sendRequest(args).then(rsp => {
                     console.log(rsp)
+					writeToTextarea(rsp)
                 }).catch( err =>{
 					console.log(err)
                 })
@@ -77,7 +78,7 @@
 
 		function writeToTextarea(text) {
 			var largeText = document.getElementById('api_response');
-			largeText.value = text;
+			largeText.value += text;
 			autoResizeTextarea(largeText);
 		}
 

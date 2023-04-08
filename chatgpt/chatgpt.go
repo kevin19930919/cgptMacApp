@@ -63,14 +63,14 @@ type ChatGPTFunc struct {
 	Result string
 }
 
-func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) {
+func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) *string {
 	c.Lock()
 	defer c.Unlock()
 	// Set up the API request headers and data
 
 	data := map[string]interface{}{
 		"model":    MODEL,
-		"messages": messages,
+		"messages": messages.Message,
 	}
 	// Make the API request
 	client := resty.New().
@@ -86,11 +86,14 @@ func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) {
 	// Handle the API response
 	if err != nil {
 		fmt.Println("Error:", err)
+		return nil
 	} else {
 		var resBody CompletionResponse
 		if err := json.Unmarshal(resp.Body(), &resBody); err != nil {
 			fmt.Println("Error:", err)
+			return nil
 		}
-		fmt.Println(resp)
+		fmt.Println("successfully get reponse", resp)
+		return &resBody.Choices[0].Message.Content
 	}
 }
