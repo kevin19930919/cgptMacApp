@@ -14,12 +14,14 @@
 					<option value="user">User</option>
 				</select>
 				<label for="content_1">Content:</label>
-				<input type="text" id="content_1" name="content[]">
+				<input type="text" id="content_1" name="content[]" style="width: 50%;">
+				<button type="button" onclick="deleteMessage(this)">Delete</button>
 			</div>
 		</div>
 		<br>
 		<button type="button" onclick="addMessage()">Add Message</button>
 		<button type="button" onclick="SendMessage()">Send Message</button>
+		<button type="button" onclick="addDefaultMessages()">Add Default Messages</button>
 	</form>
 	<br>
 	<label for="api_response">API Response:</label>
@@ -35,41 +37,72 @@
 	<script>
 		var messageCount = 1;
 
-		function addMessage() {
+		function addDefaultMessages() {
+			var defaultMessages = [
+				{role: "system", content: "Reply must use chinese"},
+				{role: "system", content: "Imagine you're chatting with a customer"},
+				{role: "system", content: "Expand sentence with a more polite tone and complete way"},
+				{role: "system", content: "Limit word number under 150"}
+			];
+		
+			var createdMessages = [];
+			for (var i = 0; i < defaultMessages.length; i++) {
+				var messageDiv = addMessage(defaultMessages[i].role, defaultMessages[i].content);
+				createdMessages.push(messageDiv);
+			}
+			
+			return createdMessages;
+		}
+		
+
+		function addMessage(role = "user", content = "") {
 			messageCount++;
 			var messages = document.getElementById("messages");
 			var newMessage = document.createElement("div");
 			newMessage.innerHTML = `
 				<label for="role_${messageCount}">Role:</label>
 				<select id="role_${messageCount}" name="role[]">
-					<option value="system">System</option>
-					<option value="user">User</option>
+					<option value="system" ${role === "system" ? "selected" : ""}>System</option>
+					<option value="user" ${role === "user" ? "selected" : ""}>User</option>
 				</select>
 				<label for="content_${messageCount}">Content:</label>
-				<input type="text" id="content_${messageCount}" name="content[]">
+				<input type="text" id="content_${messageCount}" name="content[]" style="width: 50%;" value="${content}">
+				<button type="button" onclick="deleteMessage(this)">Delete</button>
 			`;
 			messages.appendChild(newMessage);
+			return newMessage;
 		}
+		
 
+		function deleteMessage(button) {
+			var messageDiv = button.parentElement;
+			messageDiv.remove();
+			messageCount--;
+		}
+		
 		function SendMessage() {
 			var messages = [];
-			for (var i = 1; i <= messageCount; i++) {
-				var role = document.getElementById(`role_${i}`).value;
-				var content = document.getElementById(`content_${i}`).value;
+			var messagesDiv = document.getElementById("messages");
+			for (var i = 0; i < messagesDiv.children.length; i++) {
+				var messageDiv = messagesDiv.children[i];
+				var role = messageDiv.querySelector('select[name="role[]"]').value;
+				var content = messageDiv.querySelector('input[name="content[]"]').value;
 				messages.push({role: role, content: content});
 			}
+			
 			var args = {
 				messages: messages
 			};
-
+		
 			console.log(args);
 			sendRequest(args).then(rsp => {
-                    console.log(rsp)
-					writeToTextarea(rsp)
-                }).catch( err =>{
-					console.log(err)
-                })
+				console.log(rsp)
+				writeToTextarea(rsp)
+			}).catch(err => {
+				console.log(err)
+			})
 		}
+		
 
 		function autoResizeTextarea(textarea) {
 			textarea.style.height = 'auto';
