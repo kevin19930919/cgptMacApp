@@ -66,34 +66,63 @@ type ChatGPTFunc struct {
 func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) *string {
 	c.Lock()
 	defer c.Unlock()
-	// Set up the API request headers and data
 
-	data := map[string]interface{}{
-		"model":    MODEL,
-		"messages": messages.Message,
+	var wg sync.WaitGroup
+	results := make(chan *string, 10)
+
+	// Start 10 goroutines concurrently
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			// Set up the API request headers and data
+			data := map[string]interface{}{
+				"model":    MODEL,
+				"messages": messages.Message,
+			}
+			// Make the API request
+			client := resty.New().
+				SetTimeout(30*time.Second).
+				SetRetryCount(1).
+				SetHeader("content-type", "application/json").
+				SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.APIKEY)).
+				SetBaseURL(BASEURL)
+
+			req := client.R().SetBody(data)
+			resp, err := req.Post("/chat/completions")
+
+			// Handle the API response
+			if err != nil {
+				fmt.Println("Error:", err)
+				results <- nil
+			} else {
+				var resBody CompletionResponse
+				if err := json.Unmarshal(resp.Body(), &resBody); err != nil {
+					fmt.Println("Error:", err)
+					results <- nil
+				} else {
+					fmt.Println("successfully get reponse", resp)
+					results <- &resBody.Choices[0].Message.Content
+				}
+			}
+		}()
 	}
-	// Make the API request
-	client := resty.New().
-		SetTimeout(30*time.Second).
-		SetRetryCount(1).
-		SetHeader("content-type", "application/json").
-		SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.APIKEY)).
-		SetBaseURL(BASEURL)
 
-	req := client.R().SetBody(data)
-	resp, err := req.Post("/chat/completions")
+	// Wait for all goroutines to finish
+	wg.Wait()
+	close(results)
 
-	// Handle the API response
-	if err != nil {
-		fmt.Println("Error:", err)
-		return nil
-	} else {
-		var resBody CompletionResponse
-		if err := json.Unmarshal(resp.Body(), &resBody); err != nil {
-			fmt.Println("Error:", err)
-			return nil
+	// Process the results and return a single string (or any other way you prefer)
+	// Process the results and return a single string (or any other way you prefer)
+	var finalResult string
+	for result := range results {
+		if result != nil {
+			if len(finalResult) > 0 {
+				finalResult += "\n" // Add a newline character between responses
+			}
+			finalResult += *result
 		}
-		fmt.Println("successfully get reponse", resp)
-		return &resBody.Choices[0].Message.Content
 	}
+	return &finalResult
 }
