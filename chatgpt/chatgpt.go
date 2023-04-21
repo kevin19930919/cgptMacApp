@@ -82,16 +82,8 @@ func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) *string {
 	wg.Wait()
 	close(results)
 
-	var finalResult string
-	for result := range results {
-		if result != nil {
-			if len(finalResult) > 0 {
-				finalResult += "\n"
-			}
-			finalResult += *result
-		}
-	}
-	return &finalResult
+	finalResult := constructFinalResult(results)
+	return finalResult
 }
 
 func (c *ChatGPTFunc) sendSingleRequest(messages ChatGPTArgs) *string {
@@ -122,7 +114,21 @@ func (c *ChatGPTFunc) sendSingleRequest(messages ChatGPTArgs) *string {
 			fmt.Println("Error:", err)
 			return nil
 		}
-		fmt.Println("successfully get reponse", resp)
+		fmt.Println("successfully get response", resp)
 		return &resBody.Choices[0].Message.Content
 	}
+}
+
+func constructFinalResult(results chan *string) *string {
+	var finalResult string
+	for result := range results {
+		if result != nil {
+			if len(finalResult) > 0 {
+				// to make response more readable
+				finalResult += "\n\n"
+			}
+			finalResult += *result
+		}
+	}
+	return &finalResult
 }
