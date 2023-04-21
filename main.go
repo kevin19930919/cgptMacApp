@@ -19,13 +19,11 @@ type Config struct {
 }
 
 func loadHTMLFile() (*string, error) {
-	myFileContents, err := ioutil.ReadFile("index.html")
+	myFileContents, err := ioutil.ReadFile("./assets/index.html")
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		return nil, err
 	}
-
-	// Make your file contents loadable as html
 
 	loadableContents := "data:text/html," + url.PathEscape(string(myFileContents))
 	return &loadableContents, nil
