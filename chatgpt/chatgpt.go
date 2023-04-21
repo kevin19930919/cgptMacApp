@@ -74,7 +74,10 @@ func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) *string {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			result := c.sendSingleRequest(messages)
+			result, err := c.sendSingleRequest(messages)
+			if err != nil {
+				fmt.Println("Error for calling chatgpt api:", err)
+			}
 			results <- result
 		}()
 	}
@@ -86,7 +89,7 @@ func (c *ChatGPTFunc) SendRequest(messages ChatGPTArgs) *string {
 	return finalResult
 }
 
-func (c *ChatGPTFunc) sendSingleRequest(messages ChatGPTArgs) *string {
+func (c *ChatGPTFunc) sendSingleRequest(messages ChatGPTArgs) (*string, error) {
 	// Set up the API request headers and data
 	data := map[string]interface{}{
 		"model":    MODEL,
@@ -107,15 +110,15 @@ func (c *ChatGPTFunc) sendSingleRequest(messages ChatGPTArgs) *string {
 	// Handle the API response
 	if err != nil {
 		fmt.Println("Error:", err)
-		return nil
+		return nil, err
 	} else {
 		var resBody CompletionResponse
 		if err := json.Unmarshal(resp.Body(), &resBody); err != nil {
 			fmt.Println("Error:", err)
-			return nil
+			return nil, err
 		}
 		fmt.Println("successfully get response", resp)
-		return &resBody.Choices[0].Message.Content
+		return &resBody.Choices[0].Message.Content, nil
 	}
 }
 
